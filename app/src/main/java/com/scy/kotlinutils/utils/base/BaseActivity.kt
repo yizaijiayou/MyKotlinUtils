@@ -1,13 +1,19 @@
 package com.scy.kotlinutils.utils.base
 
+import android.content.SharedPreferences
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.content.res.Resources
+import android.database.sqlite.SQLiteDatabase
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
+import com.scy.dialogloading.LoadingDialog
+import com.scy.kotlinutils.R
 import com.scy.kotlinutils.utils.ToastUtils
+import com.scy.kotlinutils.utils.sql.SharedPreferencesUtils
+import com.scy.kotlinutils.utils.sql.sqlite.ProjectSQLite
 import java.lang.StringBuilder
 import java.util.ArrayList
 
@@ -28,10 +34,19 @@ abstract class BaseActivity : AppCompatActivity() {
     //操作方法
     abstract fun doWork()
 
+    lateinit var loadingDialog: LoadingDialog
+    lateinit var sharedPreferences: SharedPreferencesUtils
+    lateinit var sqLiteDatabase: SQLiteDatabase
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         //竖屏显示
 //        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+
+        loadingDialog = LoadingDialog(this, ContextCompat.getColor(this, R.color.colorAccent))
+        sharedPreferences = SharedPreferencesUtils(this)
+        val projectSQLite = ProjectSQLite(this,ProjectSQLite.SQLNAME,ProjectSQLite.SQLVERSION)
+        sqLiteDatabase = projectSQLite.readableDatabase
 
         setContentView(getContentLayoutId)
         init(savedInstanceState)
@@ -42,6 +57,13 @@ abstract class BaseActivity : AppCompatActivity() {
         ToastUtils.show(msg)
     }
 
+    fun showLoadingDialog() {
+        if (!loadingDialog.isShowing) loadingDialog.show()
+    }
+
+    fun cancelLoadingDialog() {
+        if (loadingDialog.isShowing) loadingDialog.dismiss()
+    }
 
     /**
      * 获取权限
@@ -60,7 +82,7 @@ abstract class BaseActivity : AppCompatActivity() {
         if (permissionList.size > 0) {
             ActivityCompat.requestPermissions(this, permissionList.toArray(arrayOfNulls(permissionList.size)), permissionListener.PERMISSION)
         } else {
-            if (permissionList != null) permissionListener.onGranted()
+            permissionListener.onGranted()
         }
     }
 
@@ -77,9 +99,9 @@ abstract class BaseActivity : AppCompatActivity() {
             }
 
             if (permissionB) {
-                if (permissionListener != null) permissionListener.onGranted()
+                permissionListener.onGranted()
             } else {
-                if (permissionListener != null) permissionListener.onFature(stringBuilder.toString())
+                permissionListener.onFature(stringBuilder.toString())
             }
         }
     }

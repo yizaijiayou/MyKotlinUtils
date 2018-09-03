@@ -1,6 +1,7 @@
 package com.scy.kotlinutils.utils.base
 
 import android.app.Application
+import android.content.Context
 import com.scy.kotlinutils.utils.ToastUtils
 
 /**
@@ -12,6 +13,11 @@ import com.scy.kotlinutils.utils.ToastUtils
 class BaseAppliation:Application(){
     override fun onCreate() {
         super.onCreate()
+        appContext = applicationContext
         ToastUtils.init(this)
+    }
+
+    companion object {
+        var appContext:Context? = null
     }
 }
